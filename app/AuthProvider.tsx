@@ -4,10 +4,12 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
 import type { User } from "@/lib/types";
+import { tokenManager } from "@/lib/api-client";
 
 type Role = User["role"];
 
@@ -19,7 +21,11 @@ interface AuthContextValue {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (payload: { email: string; password: string }) => Promise<{
+  login: (payload: { 
+    userId?: string;
+    email?: string; 
+    password: string 
+  }) => Promise<{
     ok: boolean;
     error?: string;
     user?: AuthUser;
@@ -43,6 +49,15 @@ export default function AuthProvider({
   const [token, setToken] = useState<string | null>(preToken);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Sync token with tokenManager on mount and when token changes
+  useEffect(() => {
+    if (token) {
+      tokenManager.setToken(token);
+    } else {
+      tokenManager.clearToken();
+    }
+  }, [token]);
+
   
   const normalizeRolePath = useCallback((r?: string | null) => {
     if (!r) return undefined;
@@ -53,13 +68,18 @@ export default function AuthProvider({
   }, []);
 
   const login = useCallback<AuthContextValue["login"]>(
-    async ({ email, password }) => {
+    async ({ userId, email, password }) => {
       setIsLoading(true);
       try {
+        // Backend expects userId, but support email as fallback
+        const loginPayload = userId 
+          ? { userId, password }
+          : { userId: email, password };
+
         const res = await fetch(`/api/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify(loginPayload),
           credentials: "include",
         });
 
@@ -82,9 +102,10 @@ export default function AuthProvider({
           role: receivedUser.role as Role,
         };
 
-
+        // Store token in memory via tokenManager
         setUser(nextUser);
         setToken(receivedToken);
+        tokenManager.setToken(receivedToken);
 
         const rolePath = normalizeRolePath(nextUser.role);
         return { ok: true, user: nextUser, rolePath };
@@ -107,13 +128,17 @@ export default function AuthProvider({
         },
         credentials: "include",
       });
+      
+      // Clear token from memory
       setUser(null);
       setToken(null);
+      tokenManager.clearToken();
+      
       window.location.href = "/";
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [token]);
 
   
 

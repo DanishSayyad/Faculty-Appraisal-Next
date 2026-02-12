@@ -17,7 +17,7 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const result = await login({ email: data.email, password: data.password })
+      const result = await login({ userId: data.userId, password: data.password })
       if (!result.ok) {
         setError(result.error || "Login failed")
         return

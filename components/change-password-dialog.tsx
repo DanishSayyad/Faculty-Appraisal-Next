@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/app/AuthProvider"
+import { api } from "@/lib/api-client"
 
 interface ChangePasswordDialogProps {
   isOpen: boolean
@@ -35,44 +36,78 @@ export function ChangePasswordDialogContent({ onClose }: ChangePasswordDialogCon
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   
   const {user, token} = useAuth();
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
+    
+    if (!token) {
+      setError("You must be logged in to change password")
+      return
+    }
+    
     if (newPassword !== confirmPassword) {
       setError("New passwords do not match")
       return
     }
+    
+    if (newPassword.length < 6) {
+      setError("New password must be at least 6 characters")
+      return
+    }
+    
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/${user?.role}/${user?.id}/reset-password`, {
-        method: 'PUT',
+      setIsLoading(true)
+      
+      // Make direct API call with token from context
+      const response = await fetch(`/api/auth/change-password`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          old_password: currentPassword,
-          new_password: newPassword,
+          currentPassword,
+          newPassword,
         }),
+        credentials: 'include',
       })
-      if (!response.ok) {
-        const errData = await response.json()
-        setError(errData.error || 'Failed to change password')
-        return
+      
+      const data = await response.json()
+      
+      if (response.ok && data.success) {
+        toast({
+          title: "Success",
+          description: data.message || "Password changed successfully",
+        })
+        onClose()
+        setCurrentPassword("")
+        setNewPassword("")
+        setConfirmPassword("")
+        setError("")
+      } else {
+        const errorMsg = data.message || "Failed to change password"
+        setError(errorMsg)
+        toast({
+          title: "Error",
+          description: errorMsg,
+          variant: "destructive",
+        })
       }
-      // Success
+    } catch (err: any) {
+      const errorMsg = err.message || "Failed to change password"
+      setError(errorMsg)
       toast({
-        title: "Success",
-        description: "Password changed successfully",
+        title: "Error",
+        description: errorMsg,
+        variant: "destructive",
       })
-      onClose()
-      setCurrentPassword("")
-      setNewPassword("")
-      setConfirmPassword("")
-      setError("")
-    } catch (err) {
-      setError('Network error')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -148,9 +183,14 @@ export function ChangePasswordDialogContent({ onClose }: ChangePasswordDialogCon
             </Button>
           </div>
         </div>
-        {error && <p className="text-red-500">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <DialogFooter>
-          <Button type="submit">Change Password</Button>
+          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Changing..." : "Change Password"}
+          </Button>
         </DialogFooter>
       </form>
     </DialogContent>

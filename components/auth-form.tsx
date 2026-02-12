@@ -16,7 +16,7 @@ interface AuthFormProps {
 
 export default function AuthForm({ type, onSubmit }: AuthFormProps) {
   const [formData, setFormData] = useState({
-    email: "",
+    userId: "",
     password: ""
   })
   const [isLoading, setIsLoading] = useState(false)
@@ -58,13 +58,13 @@ export default function AuthForm({ type, onSubmit }: AuthFormProps) {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="font-bold text-lg">User ID</Label>
+              <Label htmlFor="userId" className="font-bold text-lg">User ID</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
+                id="userId"
+                name="userId"
+                type="text"
                 placeholder="Enter your User ID"
-                value={formData.email}
+                value={formData.userId}
                 onChange={handleChange}
                 required
                 className="text-lg"
