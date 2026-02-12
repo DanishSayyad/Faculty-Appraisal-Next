@@ -1,0 +1,115 @@
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import { motion } from "framer-motion"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+
+interface AuthFormProps {
+  type: "login" | "register"
+  onSubmit: (data: any) => void
+}
+
+export default function AuthForm({ type, onSubmit }: AuthFormProps) {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: ""
+  })
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    onSubmit(formData)
+    setIsLoading(false)
+  }
+
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6 },
+    },
+  }
+
+  return (
+    <motion.div className="w-full max-w-md" variants={containerVariants} initial="hidden" animate="visible">
+      <Card className="border-border">
+        <CardHeader className="flex flex-col items-center justify-center">
+          <CardTitle className="text-2xl font-serif font-bold">Welcome</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Please Login to Continue
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="font-bold text-lg">User ID</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Enter your User ID"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="text-lg"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="font-bold text-lg">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="text-lg"
+              />
+            </div>
+
+            <div className="text-center">
+              <Button
+                type="button"
+                variant="link"
+                className="text-indigo-600 hover:text-indigo-800 text-sm font-bold transition-colors"
+                // Add handler here if needed
+              >
+                Forgot Password?
+              </Button>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+              disabled={isLoading}
+            >
+              {isLoading ? "Loading..." : "Sign In"}
+            </Button>
+
+            <div className="text-center mt-4 text-xs text-gray-500 font-semibold">
+              © 2025 PCCOE. All rights reserved by team AANSH
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+}
