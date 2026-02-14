@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { motion } from "framer-motion"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -86,14 +87,15 @@ export default function AuthForm({ type, onSubmit }: AuthFormProps) {
             </div>
 
             <div className="text-center">
-              <Button
-                type="button"
-                variant="link"
-                className="text-indigo-600 hover:text-indigo-800 text-sm font-bold transition-colors"
-                // Add handler here if needed
-              >
-                Forgot Password?
-              </Button>
+              <Link href="/forgot-password">
+                <Button
+                  type="button"
+                  variant="link"
+                  className="text-indigo-600 hover:text-indigo-800 text-sm font-bold transition-colors"
+                >
+                  Forgot Password?
+                </Button>
+              </Link>
             </div>
 
             <Button

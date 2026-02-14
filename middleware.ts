@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { useIsMobile } from "./hooks/use-mobile";
 
-const PUBLIC_PATHS = ["/"];
+const PUBLIC_PATHS = ["/", "/forgot-password", "/reset-password"];
 const ROLE_PATHS = {
   admin: ["/admin"],
   coordinator: ["/coordinator"],
