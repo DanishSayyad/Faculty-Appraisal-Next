@@ -37,6 +37,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           title: "Assign Faculty to Verification Team",
           description: "Assign faculty members to verification committee members",
         };
+      case "/admin/assign-dean-to-department":
+        return {
+          title: "Assign Interaction Deans to Department",
+          description: "Assign deans to departments for interaction evaluation",
+        };
       default:
         return {
           title: "Super Admin Dashboard",
