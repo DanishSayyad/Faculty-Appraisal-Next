@@ -131,13 +131,7 @@ export const api = {
     createUser: (userData: CreateUserRequest) =>
       apiClient.post<ApiResponse<{ user: User }>>("/admin/create-user", userData),
     
-    // Dashboard stats (you'll need to create this endpoint on your backend)
+    // Dashboard stats
     getStats: () => apiClient.get<ApiResponse<DashboardStats>>("/admin/stats"),
-    
-    // Users management (you'll need to create these endpoints)
-    getUsers: () => apiClient.get<ApiResponse<User[]>>("/admin/users"),
-    updateUser: (id: string, data: Partial<User>) =>
-      apiClient.put<ApiResponse<User>>(`/admin/users/${id}`, data),
-    deleteUser: (id: string) => apiClient.delete<ApiResponse>(`/admin/users/${id}`),
   },
 }

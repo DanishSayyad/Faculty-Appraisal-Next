@@ -12,11 +12,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   const header = useMemo(() => {
     switch (pathname) {
-      case "/admin/users":
-        return {
-          title: "User Management",
-          description: "Manage all platform users and their roles",
-        };
       case "/admin/dashboard":
         return {
           title: "Super Admin Dashboard",

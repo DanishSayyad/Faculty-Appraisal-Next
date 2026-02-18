@@ -2,7 +2,7 @@ export interface User {
   id: string
   email: string
   name: string
-  role: "admin" | "coordinator" | "head" | "reviewer" | "participant"
+  role: "admin"| "associate_dean" | "director" | "hod" | "dean" | "faculty"
   userId?: string
   department?: string
   mobile?: string

@@ -18,7 +18,6 @@ export function Sidebar({ userRole }: SidebarProps) {
   const menuItems = {
     "admin": [
       { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
-      { icon: Users, label: "Users", href: "/admin/users" },
     ],
     "coordinator": [
       { icon: LayoutDashboard, label: "Dashboard", href: "/coordinator/dashboard" },

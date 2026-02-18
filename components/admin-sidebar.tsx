@@ -76,11 +76,21 @@ export default function AdminSidebar({
   }, [location])
 
   const toggleManageFaculty = () => {
-    if (isExpanded) setIsManageFacultyOpen(!isManageFacultyOpen)
+    if (isExpanded) {
+      setIsManageFacultyOpen(!isManageFacultyOpen)
+    } else {
+      onToggle()
+      setIsManageFacultyOpen(true)
+    }
   }
 
   const toggleVerificationTeam = () => {
-    if (isExpanded) setIsVerificationTeamOpen(!isVerificationTeamOpen)
+    if (isExpanded) {
+      setIsVerificationTeamOpen(!isVerificationTeamOpen)
+    } else {
+      onToggle()
+      setIsVerificationTeamOpen(true)
+    }
   }
 
   const isActive = (path: string) => {
