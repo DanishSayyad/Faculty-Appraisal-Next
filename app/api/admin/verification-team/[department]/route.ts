@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-export async function GET(req: Request, context: { params: { department: string } }) {
+export async function GET(req: Request, context: { params: Promise<{ department: string }> }) {
   try {
     const token = req.headers.get("authorization")?.split(" ")[1]
     if (!token) {
@@ -10,8 +10,7 @@ export async function GET(req: Request, context: { params: { department: string 
       )
     }
 
-    const { params } = context;
-    const department = params.department;
+    const { department } = await context.params;
     if (!department) {
       return NextResponse.json(
         { success: false, message: "Department parameter is required" },
