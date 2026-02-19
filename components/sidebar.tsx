@@ -15,6 +15,12 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronLeft,
+  BookOpen,
+  FileText,
+  Building2,
+  GraduationCap,
+  Award,
+  CheckSquare,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { useAuth } from "@/app/AuthProvider"
@@ -125,11 +131,32 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
     ],
   },
   faculty: {
-    title: "Faculty Portal",
+    title: "Faculty Appraisal",
     sections: [
       {
         key: "faculty-dashboard",
-        items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/faculty/dashboard" }],
+        items: [
+          { icon: LayoutDashboard, label: "Dashboard", href: "/faculty/dashboard" },
+        ],
+      },
+      {
+        key: "faculty-appraisal-form",
+        label: "Appraisal Form",
+        icon: FileText,
+        collapsible: true,
+        items: [
+          { icon: BookOpen, label: "Part A: Academic Involvment", href: "/faculty/teaching" },
+          { icon: FileText, label: "Part B: Research and Development", href: "/faculty/research" },
+          { icon: Building2, label: "Part C: Self Development", href: "/faculty/selfdevelopment" },
+          { icon: GraduationCap, label: "Part D: Portfolio-Departmental & Central", href: "/faculty/portfolio" },
+          { icon: Award, label: "Part E: Extra-ordinary Contribution", href: "/faculty/extra" },
+        ],
+      },
+      {
+        key: "faculty-final-review",
+        items: [
+          { icon: CheckSquare, label: "Final Review", href: "/faculty/final-review" },
+        ],
       },
     ],
   },
