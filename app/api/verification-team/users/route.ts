@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     const token = req.headers.get('authorization');
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/faculties`, {
-      method: 'GET',
+    const body = await req.json();
+    const { department } = body;
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/verification-team/unassigned-faculties`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': token || '',
       },
+      body: JSON.stringify({ department }),
     });
 
     const data = await response.json();

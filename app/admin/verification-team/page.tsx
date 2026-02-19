@@ -68,7 +68,7 @@ export default function VerificationTeamPage() {
 
   const fetchFacultyData = async () => {
     try {
-      const response = await fetch('/api/verification-team/users', {
+      const response = await fetch('/api/admin/faculty', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

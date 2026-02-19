@@ -116,9 +116,12 @@ export default function AssignFacultyToVerificationTeamPage() {
 
       // Fetch faculty list for this department
       const facultyResponse = await fetch('/api/verification-team/users', {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        body: JSON.stringify({ department }),
       });
 
       if (!facultyResponse.ok) {
