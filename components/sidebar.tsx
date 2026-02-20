@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import {
   LayoutDashboard,
   Users,
@@ -15,6 +15,12 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronLeft,
+  BookOpen,
+  FileText,
+  Building2,
+  GraduationCap,
+  Award,
+  CheckSquare,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { useAuth } from "@/app/AuthProvider"
@@ -63,7 +69,7 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
         collapsible: true,
         items: [
           { icon: UserPlus, label: "Add Faculty", href: "/admin/add-faculty" },
-          { icon: Users, label: "Faculty List", href: "/admin/view-faculty" },
+          { icon: Users, label: "Faculty List", href: "/admin/faculty" },
         ],
       },
       {
@@ -75,7 +81,7 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
           { icon: UserCheck, label: "Verification Team", href: "/admin/verification-team" },
           {
             icon: UserCheck,
-            label: "Assign Faculty to Verification Team",
+            label: "Assign to Verification Team",
             href: "/admin/assign-faculty-to-verification-team",
           },
         ],
@@ -95,6 +101,15 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
         key: "associate-dean-dashboard",
         items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/associate-dean/dashboard" }],
       },
+      {
+        key: "associate-dean-appraisal",
+        label: "Faculty Appraisal",
+        icon: FileText,
+        collapsible: true,
+        items: [
+          { icon: FileText, label: "Review Submissions", href: "/associate-dean/review" },
+        ],
+      },
     ],
   },
   director: {
@@ -103,6 +118,15 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
       {
         key: "director-dashboard",
         items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/director/dashboard" }],
+      },
+      {
+        key: "director-appraisal",
+        label: "Faculty Appraisal",
+        icon: FileText,
+        collapsible: true,
+        items: [
+          { icon: FileText, label: "Review Submissions", href: "/director/review" },
+        ],
       },
     ],
   },
@@ -113,6 +137,16 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
         key: "hod-dashboard",
         items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/hod/dashboard" }],
       },
+      {
+        key: "hod-appraisal",
+        label: "Faculty Appraisal",
+        icon: FileText,
+        collapsible: true,
+        items: [
+          { icon: Users, label: "Department Faculty", href: "/hod/faculty" },
+          { icon: FileText, label: "Review Submissions", href: "/hod/review" },
+        ],
+      },
     ],
   },
   dean: {
@@ -122,18 +156,45 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
         key: "dean-dashboard",
         items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/dean/dashboard" }],
       },
+      {
+        key: "dean-appraisal",
+        label: "Faculty Appraisal",
+        icon: FileText,
+        collapsible: true,
+        items: [
+          { icon: Users, label: "Department Faculty", href: "/dean/faculty" },
+          { icon: FileText, label: "Review Submissions", href: "/dean/review" },
+        ],
+      },
     ],
   },
   faculty: {
-    title: "Faculty Portal",
+    title: "Faculty Appraisal",
     sections: [
       {
         key: "faculty-dashboard",
-        items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/faculty/dashboard" }],
+        items: [
+          { icon: LayoutDashboard, label: "Dashboard", href: "/faculty/dashboard" },
+        ],
+      },
+      {
+        key: "faculty-appraisal-form",
+        label: "Appraisal Form",
+        icon: FileText,
+        collapsible: true,
+        items: [
+          { icon: BookOpen, label: "Part A: Academic Involvement", href: "/faculty/appraisal?tab=A" },
+          { icon: FileText, label: "Part B: Research & Development", href: "/faculty/appraisal?tab=B" },
+          { icon: Building2, label: "Part C: Self Development", href: "/faculty/appraisal?tab=C" },
+          { icon: GraduationCap, label: "Part D: Portfolio", href: "/faculty/appraisal?tab=D" },
+          { icon: Award, label: "Part E: Extraordinary Contribution", href: "/faculty/appraisal?tab=E" },
+          { icon: CheckSquare, label: "Part F: Review & Submit", href: "/faculty/appraisal?tab=F" },
+        ],
       },
     ],
   },
 }
+
 
 export function Sidebar({
   userRole,
@@ -163,13 +224,19 @@ export function Sidebar({
 
   const panelTitle = config.title
 
+  const searchParams = useSearchParams()
+  const fullPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "")
+
   useEffect(() => {
     setOpenSections((prev) => {
       const next = { ...prev }
       config.sections
         .filter((section) => section.collapsible)
         .forEach((section) => {
-          if (section.items.some((item) => item.href === pathname)) {
+          if (section.items.some((item) => {
+            const [itemPath] = item.href.split("?")
+            return itemPath === pathname
+          })) {
             next[section.key] = true
           }
         })
@@ -177,7 +244,7 @@ export function Sidebar({
     })
   }, [pathname, config])
 
-  const isActive = (href: string) => pathname === href
+  const isActive = (href: string) => fullPath === href || pathname === href
 
   interface NavLinkProps {
     item: NavItem
@@ -198,9 +265,8 @@ export function Sidebar({
           flex items-start ${expanded ? "space-x-3" : "justify-center"} p-3 rounded-lg
           transition-all duration-200 ease-in-out
           hover:scale-[1.02] transform relative group
-          ${
-            isDropdownItem && expanded
-              ? `
+          ${isDropdownItem && expanded
+            ? `
                 ml-3 border-l-2 border-indigo-500 pl-4
                 before:content-[""]
                 before:absolute
@@ -210,7 +276,7 @@ export function Sidebar({
                 before:h-[2px]
                 before:bg-indigo-500
               `
-              : ""
+            : ""
           }
           ${isActive(item.href) ? "bg-indigo-700 text-white shadow-md" : "text-indigo-100 hover:bg-indigo-700/70"}
         `}
