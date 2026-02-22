@@ -167,6 +167,7 @@ function PartAAcademicInvolvement({
         if (parsed.courseMetrics) setCourseMetrics(parsed.courseMetrics);
         if (parsed.globalMetrics) setGlobalMetrics(parsed.globalMetrics);
         if (parsed.manualSections) setManualSections(parsed.manualSections);
+        if (parsed.scores) setScores(parsed.scores);
       } catch (e) {
         console.error("Failed to parse saved Part A data", e);
       }
@@ -179,11 +180,12 @@ function PartAAcademicInvolvement({
       const dataToSave = {
         courseMetrics,
         globalMetrics,
-        manualSections
+        manualSections,
+        scores
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
     }
-  }, [courseMetrics, globalMetrics, manualSections, STORAGE_KEY, isLoading]);
+  }, [courseMetrics, globalMetrics, manualSections, scores, STORAGE_KEY, isLoading]);
 
   // Load data from backend
   useEffect(() => {
@@ -192,16 +194,26 @@ function PartAAcademicInvolvement({
         const res = await fetch(`${apiBase}/${department}/${userId}/A`);
         if (res.ok) {
           const data = await res.json();
+
+          // Check if we have local data already. If we do, we might want to be careful.
+          // For now, let's merge or only load if local is empty.
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            // If there's non-empty local data, we prefer it as the active draft
+            if (Object.keys(parsed.courseMetrics || {}).length > 0 || parsed.globalMetrics?.eLearningInstances) {
+              setIsLoading(false);
+              return;
+            }
+          }
+
           // 1. Manual scoring status
           if (data.isManualScoring) {
             const ms: any = {};
-            ACADEMIC_SECTIONS.forEach((s, idx) => {
-              ms[s.field] = true; // Assuming we want per-section manual if overall is manual, 
-              // though the new system is per-section.
+            ACADEMIC_SECTIONS.forEach((s) => {
+              ms[s.field] = true;
             });
-            // Actually, the new system is per-section manual entry.
-            // We'll try to map the backend 'isManualScoring' to all sections for now
-            // or handle it more granularly if the backend supports it.
+            setManualSections(ms);
           }
 
           // 2. Load global metrics
@@ -214,7 +226,7 @@ function PartAAcademicInvolvement({
             ptgMeetings: data["8"]?.ptgMeetings?.toString() || "",
           });
 
-          // 3. Load course metrics (if they match existing course codes)
+          // 3. Load course metrics
           if (data["1"]?.courses) {
             const newMetrics: Record<string, CourseData> = {};
             const loadedCourses: any[] = [];
@@ -252,7 +264,7 @@ function PartAAcademicInvolvement({
       }
     };
     if (isInitialized) fetchData();
-  }, [apiBase, department, userId, isInitialized, setCourses]);
+  }, [apiBase, department, userId, isInitialized, setCourses, STORAGE_KEY]);
 
   // Sync courseMetrics when courses change (ID maintenance)
   useEffect(() => {
