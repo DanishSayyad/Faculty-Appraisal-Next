@@ -97,12 +97,21 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
       },
       {
         key: "associate-dean-appraisal",
-        label: "Faculty Appraisal",
+        label: "Appraisal Form",
         icon: FileText,
         collapsible: true,
         items: [
-          { icon: FileText, label: "Review Submissions", href: "/associate-dean/review" },
+          { icon: BookOpen, label: "Part A: Academic Involvement", href: "/associate-dean/appraisal?tab=A" },
+          { icon: FileText, label: "Part B: Research & Development", href: "/associate-dean/appraisal?tab=B" },
+          { icon: Building2, label: "Part C: Self Development", href: "/associate-dean/appraisal?tab=C" },
+          { icon: GraduationCap, label: "Part D: Portfolio", href: "/associate-dean/appraisal?tab=D" },
+          { icon: Award, label: "Part E: Extraordinary Contribution", href: "/associate-dean/appraisal?tab=E" },
+          { icon: CheckSquare, label: "Review & Submit", href: "/associate-dean/appraisal?tab=F" },
         ],
+      },
+      {
+        key: "associate-dean-review",
+        items: [{ icon: ClipboardList, label: "Review Submissions", href: "/associate-dean/review" }],
       },
     ],
   },
@@ -115,12 +124,81 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
       },
       {
         key: "director-appraisal",
-        label: "Faculty Appraisal",
+        label: "Appraisal Form",
         icon: FileText,
         collapsible: true,
         items: [
-          { icon: FileText, label: "Review Submissions", href: "/director/review" },
+          { icon: BookOpen, label: "Part A: Academic Involvement", href: "/director/appraisal?tab=A" },
+          { icon: FileText, label: "Part B: Research & Development", href: "/director/appraisal?tab=B" },
+          { icon: Building2, label: "Part C: Self Development", href: "/director/appraisal?tab=C" },
+          { icon: GraduationCap, label: "Part D: Portfolio", href: "/director/appraisal?tab=D" },
+          { icon: Award, label: "Part E: Extraordinary Contribution", href: "/director/appraisal?tab=E" },
+          { icon: CheckSquare, label: "Review & Submit", href: "/director/appraisal?tab=F" },
         ],
+      },
+      {
+        key: "director-privileges",
+        label: "Director Privileges",
+        icon: Award,
+        collapsible: true,
+        items: [
+          { icon: Building, label: "HOD Appraisals", href: "/director/hod-forms" },
+          { icon: Users, label: "Dean Appraisals", href: "/director/dean-forms" },
+          { icon: FileText, label: "Faculty Appraisals", href: "/director/faculty-forms" },
+        ],
+      },
+      {
+        key: "director-externals",
+        label: "External Reviewers",
+        icon: UserPlus,
+        collapsible: true,
+        items: [
+          { icon: UserPlus, label: "Add External", href: "/director/add-external" },
+          { icon: UserCheck, label: "Assign External", href: "/director/assign-external" },
+        ],
+      },
+      {
+        key: "director-verify",
+        items: [{ icon: CheckSquare, label: "Director Verify", href: "/director/director-verify" }],
+      },
+    ],
+  },
+  external: {
+    title: "External Reviewer",
+    sections: [
+      {
+        key: "external-dashboard",
+        items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/external/dashboard" }],
+      },
+      {
+        key: "external-evaluate",
+        items: [{ icon: ClipboardList, label: "Evaluate Faculty", href: "/external/dashboard" }],
+      },
+    ],
+  },
+  college_external: {
+    title: "College External",
+    sections: [
+      {
+        key: "college-external-dashboard",
+        items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/college-external/dashboard" }],
+      },
+      {
+        key: "college-external-evaluate",
+        items: [{ icon: ClipboardList, label: "Evaluate Authorities", href: "/college-external/dashboard" }],
+      },
+    ],
+  },
+  verification_team: {
+    title: "Verification Team",
+    sections: [
+      {
+        key: "verification-team-dashboard",
+        items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/verification-team/dashboard" }],
+      },
+      {
+        key: "verification-team-form",
+        items: [{ icon: CheckSquare, label: "Verification Form", href: "/verification-team/dashboard" }],
       },
     ],
   },
