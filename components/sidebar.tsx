@@ -124,7 +124,7 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
     ],
   },
   hod: {
-    title: "HOD",
+    title: "HOD Panel",
     sections: [
       {
         key: "hod-dashboard",
@@ -132,13 +132,41 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
       },
       {
         key: "hod-appraisal",
-        label: "Faculty Appraisal",
+        label: "Appraisal Form",
         icon: FileText,
         collapsible: true,
         items: [
-          { icon: Users, label: "Department Faculty", href: "/hod/faculty" },
-          { icon: FileText, label: "Review Submissions", href: "/hod/review" },
+          { icon: BookOpen, label: "Part A: Academic Involvement", href: "/hod/appraisal?tab=A" },
+          { icon: FileText, label: "Part B: Research & Development", href: "/hod/appraisal?tab=B" },
+          { icon: Building2, label: "Part C: Self Development", href: "/hod/appraisal?tab=C" },
+          { icon: GraduationCap, label: "Part D: Portfolio", href: "/hod/appraisal?tab=D" },
+          { icon: Award, label: "Part E: Extraordinary Contribution", href: "/hod/appraisal?tab=E" },
+          { icon: CheckSquare, label: "Review & Submit", href: "/hod/appraisal?tab=F" },
         ],
+      },
+      {
+        key: "hod-privileges",
+        label: "HOD Privileges",
+        icon: Award,
+        collapsible: true,
+        items: [
+          { icon: Users, label: "Department Faculty Forms", href: "/hod/faculty" },
+          { icon: GraduationCap, label: "Final Marks", href: "/hod/final-marks" },
+        ],
+      },
+      {
+        key: "hod-interactions",
+        label: "Interactions",
+        icon: UserPlus,
+        collapsible: true,
+        items: [
+          { icon: UserPlus, label: "Add External Faculty", href: "/hod/add-external-faculty" },
+          { icon: UserCheck, label: "Assign External Faculty", href: "/hod/assign-faculty-external" },
+        ],
+      },
+      {
+        key: "hod-final-review",
+        items: [{ icon: CheckSquare, label: "Final Review", href: "/hod/final-review" }],
       },
     ],
   },
@@ -314,6 +342,7 @@ export function Sidebar({
           fixed top-0 left-0 h-screen bg-indigo-800 text-white z-40
           transform transition-all duration-300 ease-in-out
           ${expanded ? "w-72" : "w-20"} overflow-y-auto flex flex-col
+          [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-indigo-500/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-indigo-400/70
           ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
@@ -337,7 +366,7 @@ export function Sidebar({
           </div>
         </div>
 
-        <div className={`${expanded ? "px-4" : "px-2"} py-4 flex-grow overflow-y-auto`}>
+        <div className={`${expanded ? "px-4" : "px-2"} py-4 flex-grow overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-indigo-500/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-indigo-400/70`}>
           <nav className="space-y-1">
             {config.sections.map((section) => {
               if (!section.collapsible) {
