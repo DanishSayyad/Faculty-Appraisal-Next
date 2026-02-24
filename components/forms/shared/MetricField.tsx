@@ -63,7 +63,7 @@ export default function MetricField({
                             value={value === 0 ? "" : value}
                             onChange={onChange}
                             placeholder={placeholder}
-                            className="w-full rounded-md border border-slate-400 bg-blue-50 px-3 py-1.5 text-base text-right font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 placeholder:text-xs placeholder:font-normal placeholder:text-slate-400"
+                            className="w-full rounded-md border border-slate-400 bg-blue-50 px-3 py-1.5 text-base text-right font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 placeholder:text-xs placeholder:font-normal placeholder:text-slate-900"
                         />
                     </div>
 
@@ -76,13 +76,13 @@ export default function MetricField({
                             onChange={onProofChange}
                             disabled={disabled}
                             placeholder={proofPlaceholder}
-                            className="w-full rounded-md border border-slate-400 bg-background px-3 py-1.5 text-base font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition disabled:opacity-50 placeholder:text-xs placeholder:font-normal placeholder:text-slate-400"
+                            className="w-full rounded-md border border-slate-400 bg-background px-3 py-1.5 text-base font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition disabled:opacity-50 placeholder:text-xs placeholder:font-normal placeholder:text-slate-900"
                         />
                     </div>
 
-                    {/* Verified Score (always shown, green, disabled — enabled by verification team later) */}
-                    <div className="w-24 shrink-0">
-                        <p className="text-[10px] font-bold text-green-700 uppercase tracking-widest mb-1 hidden sm:block">Verified Score</p>
+                    {/* Verified Score — hidden until enabled by verification team */}
+                    <div className="hidden w-24 shrink-0">
+                        <p className="text-[10px] font-bold text-green-700 uppercase tracking-widest mb-1">Verified Score</p>
                         <input
                             type="text"
                             readOnly

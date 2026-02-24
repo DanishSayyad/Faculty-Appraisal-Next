@@ -105,7 +105,7 @@ const MetricInputField = ({ label, value, onChange, className = "", placeholder 
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-lg border-2 border-indigo-200 bg-white px-4 py-2 text-lg font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm placeholder:text-xs placeholder:font-normal placeholder:text-slate-400"
+      className="w-full rounded-lg border-2 border-indigo-200 bg-white px-4 py-2 text-lg font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm placeholder:text-xs placeholder:font-normal placeholder:text-slate-900"
     />
   </div>
 );
@@ -656,7 +656,7 @@ function PartAAcademicInvolvement({
                       value={scores[field] === 0 ? "" : scores[field]}
                       onChange={(e) => setScore(field, Number(e.target.value))}
                       placeholder="0"
-                      className="w-24 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-lg text-right font-black text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+                      className="w-24 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-lg text-right font-black text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm placeholder:text-xs placeholder:font-normal placeholder:text-slate-900"
                     />
                     <span className="text-base font-bold text-indigo-700 tabular-nums uppercase">
                       / {PART_A_MAXES[field]}
@@ -670,6 +670,17 @@ function PartAAcademicInvolvement({
                     </span>
                   </span>
                 )}
+              </div>
+              {/* Score After Verification — hidden until enabled by verification team */}
+              <div className="hidden">
+                <div className="flex items-center justify-between px-2 pt-2 border-t border-green-100">
+                  <span className="text-green-700 text-sm font-black uppercase tracking-widest">
+                    Score After Verification
+                  </span>
+                  <span className="font-black text-green-700 text-sm tabular-nums px-3 py-1 rounded border border-green-200 bg-green-50">
+                    Pending
+                  </span>
+                </div>
               </div>
             </div>
           </SectionCard>

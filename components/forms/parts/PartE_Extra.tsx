@@ -154,7 +154,7 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
                             disabled={locked}
                             onChange={(e) => setFormData((p) => ({ ...p, contributions: e.target.value }))}
                             rows={16}
-                            className="resize-none text-lg leading-relaxed placeholder:italic placeholder:text-muted-foreground focus-visible:ring-indigo-300 focus-visible:border-indigo-600 focus-visible:ring-4 font-medium text-slate-900 border-2 border-indigo-200 shadow-sm"
+                            className="resize-none text-lg leading-relaxed placeholder:italic placeholder:text-slate-900 focus-visible:ring-indigo-300 focus-visible:border-indigo-600 focus-visible:ring-4 font-medium text-slate-900 border-2 border-indigo-200 shadow-sm"
                         />
                     </div>
                     <div className="flex items-center justify-between py-3 border-t border-indigo-100 pt-5">
@@ -181,7 +181,7 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
                                     selfAwardedMarks: Math.min(PART_E_MAX, Math.max(0, Number(e.target.value))),
                                 }))
                             }
-                            className="w-32 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-xl text-right font-black tabular-nums text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm placeholder:text-xs placeholder:font-normal placeholder:text-indigo-400"
+                            className="w-32 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-xl text-right font-black tabular-nums text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm placeholder:text-xs placeholder:font-normal placeholder:text-slate-900"
                         />
                     </div>
                 </div>
@@ -193,6 +193,13 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
                     score={formData.selfAwardedMarks}
                     total={PART_E_MAX}
                 />
+                {/* Score After Verification — hidden until enabled by verification team */}
+                <div className="hidden">
+                    <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-4 py-3 mt-2">
+                        <span className="text-sm font-bold text-green-700 uppercase tracking-wider">Score After Verification</span>
+                        <span className="text-lg font-black text-green-700 tabular-nums">Pending</span>
+                    </div>
+                </div>
             </SectionCard>
 
             {submitSuccess && (

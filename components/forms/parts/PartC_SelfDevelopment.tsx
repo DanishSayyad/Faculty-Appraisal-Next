@@ -93,7 +93,7 @@ function NumericRow({
                 value={value === 0 ? "" : value}
                 onChange={onChange}
                 placeholder="Enter count"
-                className="w-24 shrink-0 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-lg text-right font-black text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 shadow-sm placeholder:text-xs placeholder:font-normal placeholder:text-indigo-400"
+                className="w-24 shrink-0 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-lg text-right font-black text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 shadow-sm placeholder:text-xs placeholder:font-normal placeholder:text-slate-900"
             />
         </div>
     );
@@ -433,16 +433,15 @@ function PartCSelfDevelopment({
                 <div className="overflow-hidden rounded-xl border-2 border-indigo-200">
                     <table className="w-full text-base">
                         <tbody className="divide-y divide-indigo-100">
-                            {verifiedScore !== undefined && (
-                                <tr className="bg-indigo-50">
-                                    <td className="px-6 py-4 font-semibold uppercase tracking-widest text-base text-indigo-700">
-                                        Verified Score
-                                    </td>
-                                    <td className="px-6 py-4 text-right font-extrabold tabular-nums text-indigo-900">
-                                        {verifiedScore}
-                                    </td>
-                                </tr>
-                            )}
+                            {/* Verified Score — hidden until enabled by verification team */}
+                            <tr className="hidden">
+                                <td className="px-6 py-4 font-semibold uppercase tracking-widest text-base text-green-700">
+                                    Score After Verification
+                                </td>
+                                <td className="px-6 py-4 text-right font-extrabold tabular-nums text-green-700">
+                                    {verifiedScore ?? "Pending"}
+                                </td>
+                            </tr>
                             <tr className="bg-indigo-100 font-extrabold border-t-2 border-indigo-200">
                                 <td className="px-6 py-5 font-black uppercase tracking-widest text-indigo-800 text-lg">
                                     Total Part C Score
