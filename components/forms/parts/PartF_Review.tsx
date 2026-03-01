@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { APPRAISAL_STATUS } from "@/lib/constants";
 import Loader from "@/components/loader";
 
 const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000").replace(/\/$/, "");
@@ -48,7 +49,7 @@ function PartFReview({ department, userId }: PartFReviewProps) {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [showFreezeModal, setShowFreezeModal] = useState(false);
   const [isFormFrozen, setIsFormFrozen] = useState(false);
-  const [formStatus, setFormStatus] = useState("DRAFT");
+  const [formStatus, setFormStatus] = useState(APPRAISAL_STATUS.PEDING);
   const [pdfMetadata, setPdfMetadata] = useState<PdfMetadata | null>(null);
   const [pdfExists, setPdfExists] = useState(false);
   const [savingPdf, setSavingPdf] = useState(false);
@@ -68,8 +69,8 @@ function PartFReview({ department, userId }: PartFReviewProps) {
       const { data } = await axios.get(`${BACKEND}/appraisal/${userId}`, { withCredentials: true });
       // Backend wraps: { success, data: IFacultyAppraisal, message }
       const appraisal = data?.data ?? data;
-      setFormStatus(appraisal?.status ?? "DRAFT");
-      if (appraisal?.status && appraisal.status !== "DRAFT") setIsFormFrozen(true);
+      setFormStatus(appraisal?.status ?? APPRAISAL_STATUS.PEDING);
+      if (appraisal?.status && appraisal.status !== APPRAISAL_STATUS.PEDING) setIsFormFrozen(true);
     } catch (err) {
       console.error("Fetch status failed", err);
     }
@@ -322,7 +323,7 @@ function PartFReview({ department, userId }: PartFReviewProps) {
         )}
       </div>
 
-      {formStatus === "DRAFT" && (
+      {formStatus === APPRAISAL_STATUS.PEDING && (
         <div className="flex items-start gap-3 rounded-xl border-2 border-indigo-200 bg-indigo-50 px-6 py-4">
           <input
             id="declaration-agree"
@@ -353,7 +354,7 @@ function PartFReview({ department, userId }: PartFReviewProps) {
           </p>
         </div>
       ) : (
-        formStatus === "DRAFT" && (
+        formStatus === APPRAISAL_STATUS.PEDING && (
           <div className="flex justify-center pt-3">
             <Button
               onClick={() => setShowFreezeModal(true)}
