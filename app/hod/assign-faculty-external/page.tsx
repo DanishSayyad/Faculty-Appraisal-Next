@@ -98,7 +98,7 @@ export default function AssignFacultyExternalPage() {
     try {
       const [extRes, facRes, deansRes] = await Promise.all([
         axios.get(`${API_BASE}/interaction/${dept}/get-externals`, authHeader),
-        axios.get(`${API_BASE}/common/by-department?department=${dept}`, authHeader),
+        axios.get(`${API_BASE}/interaction/${dept}/interaction-pending-faculty`, authHeader),
         axios.get(`${API_BASE}/interaction/${dept}/interaction-deans`, authHeader),
       ]);
 
@@ -107,24 +107,17 @@ export default function AssignFacultyExternalPage() {
         setExternals(extRes.data.data || []);
       }
 
-      // Filter faculty: role=faculty + valid academic designation
-      const allowedDesignations = ["Professor", "Associate Professor", "Assistant Professor"];
-      const allUsers = facRes.data.users || [];
-      setFaculties(
-        allUsers
-          .filter(
-            (u: any) =>
-              u.role === "faculty" &&
-              u.designation &&
-              allowedDesignations.includes(u.designation)
-          )
-          .map((u: any) => ({
+      // Faculty with Interaction Pending appraisal status
+      if (facRes.data.success) {
+        setFaculties(
+          (facRes.data.data || []).map((u: any) => ({
             id: u.userId,
             name: u.name,
             designation: u.designation,
             email: u.email,
           }))
-      );
+        );
+      }
 
       // Interaction deans
       if (deansRes.data.success) {
