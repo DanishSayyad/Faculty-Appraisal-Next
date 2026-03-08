@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import axios, { AxiosError } from "axios";
 import {
@@ -144,11 +144,14 @@ export default function HodInteractionEvaluationPage() {
     const { user, token } = useAuth();
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
     const facultyId = params.facultyId as string;
+    const externalId = searchParams.get("externalId") || "";
     const dept = user?.department;
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
     const [faculty, setFaculty] = useState<FacultyInfo | null>(null);
     const [externalReviewer, setExternalReviewer] = useState<ExternalReviewer | null>(null);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -167,76 +170,77 @@ export default function HodInteractionEvaluationPage() {
     // ── Fetch faculty + assigned external reviewer ───────────────────────────
 
     const fetchData = useCallback(async () => {
-        if (!dept || !token) return;
+        if (!dept || !token || !externalId) return;
         setLoading(true);
         setError(null);
+        const authHeader = { headers: { Authorization: `Bearer ${token}` } };
         try {
-            // Fetch all faculty users to find the faculty by ID
-            const [usersRes, assignmentsRes] = await Promise.all([
-                axios.get(`${API_BASE}/api/users`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                }),
-                axios.get(`${API_BASE}/api/hod/${dept}/external-assignments`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                }),
-            ]);
+            const extRes = await axios.get(`${API_BASE}/interaction/${dept}/get-externals`, authHeader);
 
-            // Find faculty by ID
-            const allUsers = usersRes.data || [];
-            const foundFaculty = allUsers.find((u: any) => u._id === facultyId);
-            if (foundFaculty) {
-                setFaculty({
-                    id: foundFaculty._id,
-                    name: foundFaculty.name,
-                    designation: foundFaculty.desg || foundFaculty.designation || "",
-                    role: foundFaculty.role || "",
-                    email: foundFaculty.email,
-                    isHodMarksGiven: foundFaculty.isHodMarksGiven,
-                    hod_total_marks: foundFaculty.hod_total_marks,
-                });
-            } else {
-                setError("Faculty member not found.");
+            if (!extRes.data.success) {
+                setError("Failed to load externals.");
                 return;
             }
 
-            // Find which external reviewer this faculty is assigned to
-            if (assignmentsRes.data.success) {
-                const assignmentsData: Record<string, any> = assignmentsRes.data.data || {};
-                for (const [externalId, assignmentInfo] of Object.entries(assignmentsData)) {
-                    const assignedFaculty: any[] = assignmentInfo?.assigned_faculty || [];
-                    const isAssigned = assignedFaculty.some((f: any) => f._id === facultyId || f.id === facultyId);
-                    if (isAssigned) {
-                        try {
-                            const extRes = await axios.get(`${API_BASE}/api/hod/${dept}/get-externals`, {
-                                headers: { Authorization: `Bearer ${token}` },
-                            });
-                            if (extRes.data.success) {
-                                const ext = extRes.data.data.find((e: any) => e._id === externalId);
-                                if (ext) {
-                                    setExternalReviewer({
-                                        id: ext._id,
-                                        name: ext.full_name,
-                                        organization: ext.organization,
-                                        designation: ext.desg,
-                                        email: ext.mail,
-                                    });
-                                }
-                            }
-                        } catch {
-                        }
-                        break;
-                    }
+            const externals: any[] = extRes.data.data || [];
+            const ext = externals.find((e: any) => e.userId === externalId);
+            if (!ext) {
+                setError("External reviewer not found.");
+                return;
+            }
+
+            setExternalReviewer({
+                id: ext.userId,
+                name: ext.full_name,
+                organization: ext.organization,
+                designation: ext.desg,
+                email: ext.mail,
+            });
+
+            const assignedFac = (ext.assignedFaculties || []).find((f: any) => f._id === facultyId);
+            if (assignedFac) {
+                setFaculty({
+                    id: assignedFac._id,
+                    name: assignedFac.name,
+                    designation: assignedFac.desg || "",
+                    role: "faculty",
+                    email: undefined,
+                });
+            } else {
+                setError("Faculty member not found in this external's assignments.");
+                return;
+            }
+
+            // Try loading existing evaluation
+            try {
+                const evalRes = await axios.get(
+                    `${API_BASE}/interaction/${dept}/evaluation/${externalId}/${facultyId}`,
+                    authHeader
+                );
+                if (evalRes.data.success && evalRes.data.data?.hodEvaluation?.evaluatedAt) {
+                    const hod = evalRes.data.data.hodEvaluation;
+                    setEvaluation({
+                        knowledge: hod.knowledge ?? "",
+                        skills: hod.skills ?? "",
+                        attributes: hod.attributes ?? "",
+                        outcomesInitiatives: hod.outcomesInitiatives ?? "",
+                        selfBranching: hod.selfBranching ?? "",
+                        teamPerformance: hod.teamPerformance ?? "",
+                        comments: hod.comments || "",
+                    });
+                    setIsSubmitted(true);
                 }
+            } catch {
+                // No existing evaluation — that's fine
             }
         } catch (err: any) {
-            console.error("Error fetching evaluation data:", err);
             const axErr = err as AxiosError<{ message?: string }>;
             setError(axErr.response?.data?.message ?? axErr.message ?? "Failed to load data.");
             toast({ title: "Error", description: "Failed to load faculty evaluation data.", variant: "destructive" });
         } finally {
             setLoading(false);
         }
-    }, [dept, token, facultyId, toast]);
+    }, [dept, token, facultyId, externalId, toast]);
 
     useEffect(() => {
         fetchData();
@@ -298,10 +302,17 @@ export default function HodInteractionEvaluationPage() {
         setSaving(true);
         try {
             await axios.post(
-                `${API_BASE}/${dept}/hod_interaction_marks/${externalReviewer.id}/${facultyId}`,
+                `${API_BASE}/interaction/${dept}/evaluate/hod/${externalReviewer.id}/${facultyId}`,
                 {
-                    total_marks: totalScore,
+                    knowledge: Number(evaluation.knowledge) || 0,
+                    skills: Number(evaluation.skills) || 0,
+                    attributes: Number(evaluation.attributes) || 0,
+                    outcomesInitiatives: Number(evaluation.outcomesInitiatives) || 0,
+                    selfBranching: Number(evaluation.selfBranching) || 0,
+                    teamPerformance: Number(evaluation.teamPerformance) || 0,
                     comments: evaluation.comments || "",
+                    evaluatorId: user?.id,
+                    evaluatorName: user?.name,
                 },
                 {
                     headers: { Authorization: `Bearer ${token}` },
@@ -312,6 +323,7 @@ export default function HodInteractionEvaluationPage() {
             const storageKey = `hod_eval_${dept}_${facultyId}`;
             localStorage.removeItem(storageKey);
 
+            setIsSubmitted(true);
             setShowConfirmDialog(false);
             toast({ title: "Evaluation Submitted", description: `Marks submitted successfully for ${faculty?.name}.` });
             router.push("/hod/assign-faculty-external");
@@ -435,6 +447,19 @@ export default function HodInteractionEvaluationPage() {
                     </Card>
                 </motion.div>
 
+                {/* Submitted banner */}
+                {isSubmitted && (
+                    <motion.div variants={itemVariants}>
+                        <div className="flex items-center gap-3 p-4 rounded-xl bg-green-50 border border-green-200">
+                            <CheckCircle2 size={18} className="text-green-600 shrink-0" />
+                            <div>
+                                <p className="text-sm font-bold text-green-800">Evaluation Already Submitted</p>
+                                <p className="text-xs text-green-600">This evaluation has been submitted and can no longer be edited.</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+
                 {/* Progress indicator */}
                 <motion.div variants={itemVariants}>
                     <div className="flex items-center justify-between text-sm text-muted-foreground px-1">
@@ -489,8 +514,9 @@ export default function HodInteractionEvaluationPage() {
                                                 value={currentValue}
                                                 onWheel={(e) => e.currentTarget.blur()}
                                                 onChange={(e) => handleScoreChange(criterion.key, e.target.value)}
+                                                disabled={isSubmitted}
                                                 aria-label={`${criterion.label} score`}
-                                                className="w-20 rounded-lg border-2 border-border bg-white px-3 py-1.5 text-center text-lg font-black tabular-nums text-foreground focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                className={`w-20 rounded-lg border-2 border-border px-3 py-1.5 text-center text-lg font-black tabular-nums text-foreground transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isSubmitted ? "bg-muted/50 cursor-not-allowed opacity-70" : "bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500"}`}
                                             />
                                             <span className="text-sm text-muted-foreground font-semibold">/ {criterion.max}</span>
                                         </div>
@@ -516,8 +542,9 @@ export default function HodInteractionEvaluationPage() {
                                 placeholder="Provide any additional feedback or comments about this faculty member's performance during your interaction…"
                                 value={evaluation.comments}
                                 onChange={(e) => setEvaluation((prev) => ({ ...prev, comments: e.target.value }))}
+                                disabled={isSubmitted}
                                 rows={4}
-                                className="resize-none text-sm focus-visible:ring-indigo-300 focus-visible:border-indigo-500"
+                                className={`resize-none text-sm ${isSubmitted ? "bg-muted/50 cursor-not-allowed" : "focus-visible:ring-indigo-300 focus-visible:border-indigo-500"}`}
                             />
                         </CardContent>
                     </Card>
@@ -543,29 +570,36 @@ export default function HodInteractionEvaluationPage() {
                                 </div>
 
                                 {/* Buttons */}
-                                <div className="flex items-center gap-3 flex-wrap">
-                                    <Button
-                                        variant="outline"
-                                        onClick={handleSaveDraft}
-                                        disabled={saving}
-                                        className="gap-2"
-                                    >
-                                        <Save size={14} />
-                                        Save Draft
-                                    </Button>
+                                {isSubmitted ? (
+                                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-100 border border-green-200">
+                                        <CheckCircle2 size={16} className="text-green-600" />
+                                        <span className="text-sm font-bold text-green-800">Evaluation Submitted</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-3 flex-wrap">
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleSaveDraft}
+                                            disabled={saving}
+                                            className="gap-2"
+                                        >
+                                            <Save size={14} />
+                                            Save Draft
+                                        </Button>
 
-                                    <Button
-                                        onClick={handleSubmitClick}
-                                        disabled={saving || completedCriteria < CRITERIA.length}
-                                        className="gap-2 bg-indigo-700 hover:bg-indigo-800 text-white shadow-lg shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50 disabled:transform-none"
-                                    >
-                                        <CheckCircle2 size={16} />
-                                        Submit Evaluation
-                                    </Button>
-                                </div>
+                                        <Button
+                                            onClick={handleSubmitClick}
+                                            disabled={saving || completedCriteria < CRITERIA.length}
+                                            className="gap-2 bg-indigo-700 hover:bg-indigo-800 text-white shadow-lg shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50 disabled:transform-none"
+                                        >
+                                            <CheckCircle2 size={16} />
+                                            Submit Evaluation
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
 
-                            {completedCriteria < CRITERIA.length && (
+                            {!isSubmitted && completedCriteria < CRITERIA.length && (
                                 <p className="text-[11px] text-muted-foreground mt-3 font-medium">
                                     Complete all {CRITERIA.length} criteria to enable submission. ({CRITERIA.length - completedCriteria} remaining)
                                 </p>
