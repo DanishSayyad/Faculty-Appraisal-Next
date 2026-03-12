@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Search, Plus, X, Users, UserCheck, Save, RefreshCw,
-  Crown, CheckCircle, FileText, ArrowRight, UserPlus,
+  Crown, CheckCircle, CheckCircle2, FileText, ArrowRight, UserPlus,
   ShieldCheck, Trash2, Info, LayoutGrid
 } from "lucide-react";
 import Loader from "@/components/loader";
@@ -81,6 +81,8 @@ export default function AssignFacultyExternalPage() {
 
   // Staged faculty IDs for bulk assignment
   const [staged, setStaged] = useState<Set<string>>(new Set());
+  // key = "externalId:facultyId"
+  const [evaluatedSet, setEvaluatedSet] = useState<Set<string>>(new Set());
 
   const authHeader = useMemo(
     () => ({ headers: { Authorization: `Bearer ${token}` } }),
@@ -104,7 +106,33 @@ export default function AssignFacultyExternalPage() {
 
       // Externals
       if (extRes.data.success) {
-        setExternals(extRes.data.data || []);
+        const extData: ExternalEvaluator[] = extRes.data.data || [];
+        setExternals(extData);
+
+        // Check evaluation status for each faculty-external pair
+        const checked = new Set<string>();
+        const pairs: { extId: string; facId: string }[] = [];
+        extData.forEach((ext) =>
+          ext.assignedFaculties.forEach((f) =>
+            pairs.push({ extId: ext.userId, facId: f._id })
+          )
+        );
+        await Promise.all(
+          pairs.map(async ({ extId, facId }) => {
+            try {
+              const evalRes = await axios.get(
+                `${API_BASE}/interaction/${dept}/evaluation/${extId}/${facId}`,
+                authHeader
+              );
+              if (evalRes.data.success && evalRes.data.data?.hodEvaluation?.evaluatorId) {
+                checked.add(`${extId}:${facId}`);
+              }
+            } catch {
+              // No evaluation found
+            }
+          })
+        );
+        setEvaluatedSet(checked);
       }
 
       // Faculty with Interaction Pending appraisal status
@@ -438,15 +466,22 @@ export default function AssignFacultyExternalPage() {
                               </div>
                               <div className="flex items-center gap-2">
                                 {assignedDeanId ? (
-                                  <Button
-                                    size="sm"
-                                    className="h-6 px-2 text-[10px] bg-indigo-600 hover:bg-indigo-700 text-white gap-1"
-                                    onClick={() =>
-                                      router.push(`/hod/evaluate/${f._id}?externalId=${ext.userId}`)
-                                    }
-                                  >
-                                    Evaluate <FileText size={10} />
-                                  </Button>
+                                  evaluatedSet.has(`${ext.userId}:${f._id}`) ? (
+                                    <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-green-100 border border-green-200 text-green-700">
+                                      <CheckCircle2 size={10} />
+                                      <span className="text-[10px] font-semibold">Evaluated</span>
+                                    </div>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      className="h-6 px-2 text-[10px] bg-indigo-600 hover:bg-indigo-700 text-white gap-1"
+                                      onClick={() =>
+                                        router.push(`/hod/evaluate/${f._id}?externalId=${ext.userId}`)
+                                      }
+                                    >
+                                      Evaluate <FileText size={10} />
+                                    </Button>
+                                  )
                                 ) : (
                                   <Button
                                     variant="ghost"

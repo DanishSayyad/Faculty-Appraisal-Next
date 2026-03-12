@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Search, Plus, X, Users, UserCheck, Save, RefreshCw,
-  Crown, CheckCircle, UserPlus, ClipboardList,
+  Crown, CheckCircle, CheckCircle2, UserPlus, ClipboardList,
 } from "lucide-react";
 import { containerVariants, itemVariants } from "@/lib/animations";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +69,8 @@ export default function DirectorAssignExternalPage() {
   const [stagedIds, setStagedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
+  // key = "externalId:facultyId"
+  const [evaluatedSet, setEvaluatedSet] = useState<Set<string>>(new Set());
 
   // Fetch externals (pccoe) and all HODs/Deans for assignment
   const fetchData = useCallback(async () => {
@@ -88,6 +90,32 @@ export default function DirectorAssignExternalPage() {
       ]);
 
       setExternals(extRes.data.data || []);
+
+      // Check evaluation status for each faculty-external pair
+      const extData: ExternalEvaluator[] = extRes.data.data || [];
+      const checked = new Set<string>();
+      const pairs: { extId: string; facId: string }[] = [];
+      extData.forEach((ext) =>
+        ext.assignedFaculties.forEach((f) =>
+          pairs.push({ extId: ext.userId, facId: f._id })
+        )
+      );
+      await Promise.all(
+        pairs.map(async ({ extId, facId }) => {
+          try {
+            const evalRes = await axios.get(
+              `${API_BASE}/interaction/${DIRECTOR_DEPT}/evaluation/${extId}/${facId}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (evalRes.data.success && evalRes.data.data?.directorEvaluation?.evaluatorId) {
+              checked.add(`${extId}:${facId}`);
+            }
+          } catch {
+            // No evaluation found
+          }
+        })
+      );
+      setEvaluatedSet(checked);
 
       // Combine HODs and Deans into one list
       const hods = (hodRes.data.data || []).map((a: any) => ({
@@ -267,19 +295,26 @@ export default function DirectorAssignExternalPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-                            onClick={() =>
-                              router.push(
-                                `/director/interaction-evaluation/${f._id}?department=pccoe&externalId=${ext.userId}`
-                              )
-                            }
-                          >
-                            <ClipboardList className="h-3.5 w-3.5 mr-1" />
-                            Evaluate
-                          </Button>
+                          {evaluatedSet.has(`${ext.userId}:${f._id}`) ? (
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-green-100 border border-green-200 text-green-700">
+                              <CheckCircle2 size={14} />
+                              <span className="text-sm font-semibold">Evaluated</span>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                              onClick={() =>
+                                router.push(
+                                  `/director/interaction-evaluation/${f._id}?department=pccoe&externalId=${ext.userId}`
+                                )
+                              }
+                            >
+                              <ClipboardList className="h-3.5 w-3.5 mr-1" />
+                              Evaluate
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="ghost"

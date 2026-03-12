@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { containerVariants, itemVariants } from "@/lib/animations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, FileText, ArrowRight } from "lucide-react";
+import { User, FileText, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/AuthProvider";
 import axios from "axios";
@@ -27,6 +27,7 @@ export default function ExternalInteractionMarksPage() {
   const [faculties, setFaculties] = useState<AssignedFaculty[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [evaluatedSet, setEvaluatedSet] = useState<Set<string>>(new Set());
 
   const fetchData = useCallback(async () => {
     if (!dept || !token) return;
@@ -40,7 +41,28 @@ export default function ExternalInteractionMarksPage() {
         // Backend already filters to only this external's record
         const externals: any[] = res.data.data || [];
         const myExternal = externals[0];
-        setFaculties(myExternal?.assignedFaculties || []);
+        const assigned: AssignedFaculty[] = myExternal?.assignedFaculties || [];
+        setFaculties(assigned);
+
+        // Check evaluation status for each faculty
+        const externalId = user?.id ?? "";
+        const checked = new Set<string>();
+        await Promise.all(
+          assigned.map(async (f) => {
+            try {
+              const evalRes = await axios.get(
+                `${API_BASE}/interaction/${dept}/evaluation/${externalId}/${f._id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              if (evalRes.data.success && evalRes.data.data?.externalEvaluation?.evaluatorId) {
+                checked.add(f._id);
+              }
+            } catch {
+              // No evaluation found – not evaluated yet
+            }
+          })
+        );
+        setEvaluatedSet(checked);
       } else {
         setError("Failed to load assignments.");
       }
@@ -49,7 +71,7 @@ export default function ExternalInteractionMarksPage() {
     } finally {
       setLoading(false);
     }
-  }, [dept, token]);
+  }, [dept, token, user?.id]);
 
   useEffect(() => {
     fetchData();
@@ -98,15 +120,22 @@ export default function ExternalInteractionMarksPage() {
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">
-                    <Button
-                      size="sm"
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-                      onClick={() => router.push(`/external/evaluate/${faculty._id}?department=${dept ?? ""}&externalId=${user?.id ?? ""}`)}  
-                    >
-                      <FileText size={14} />
-                      Evaluate
-                      <ArrowRight size={14} />
-                    </Button>
+                    {evaluatedSet.has(faculty._id) ? (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-green-100 border border-green-200 text-green-700">
+                        <CheckCircle2 size={14} />
+                        <span className="text-sm font-semibold">Evaluated</span>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+                        onClick={() => router.push(`/external/evaluate/${faculty._id}?department=${dept ?? ""}&externalId=${user?.id ?? ""}`)}
+                      >
+                        <FileText size={14} />
+                        Evaluate
+                        <ArrowRight size={14} />
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

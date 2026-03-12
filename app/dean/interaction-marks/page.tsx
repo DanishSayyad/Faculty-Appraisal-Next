@@ -8,6 +8,7 @@ import {
   User,
   FileText,
   CheckCircle,
+  CheckCircle2,
   AlertCircle,
   Info,
   Briefcase,
@@ -47,6 +48,8 @@ export default function InteractionMarksPage() {
   const [externals, setExternals] = useState<ExternalInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // key = "externalId:facultyId"
+  const [evaluatedSet, setEvaluatedSet] = useState<Set<string>>(new Set());
 
   const fetchData = useCallback(async () => {
     if (!dept || !token) return;
@@ -57,7 +60,33 @@ export default function InteractionMarksPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
-        setExternals(res.data.data || []);
+        const data: ExternalInfo[] = res.data.data || [];
+        setExternals(data);
+
+        // Check evaluation status for each faculty-external pair
+        const checked = new Set<string>();
+        const pairs: { extId: string; facId: string }[] = [];
+        data.forEach((ext) =>
+          ext.assignedFaculties.forEach((f) =>
+            pairs.push({ extId: ext.userId, facId: f._id })
+          )
+        );
+        await Promise.all(
+          pairs.map(async ({ extId, facId }) => {
+            try {
+              const evalRes = await axios.get(
+                `${API_BASE}/interaction/${dept}/evaluation/${extId}/${facId}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              if (evalRes.data.success && evalRes.data.data?.deanEvaluation?.evaluatorId) {
+                checked.add(`${extId}:${facId}`);
+              }
+            } catch {
+              // No evaluation found
+            }
+          })
+        );
+        setEvaluatedSet(checked);
       } else {
         setError("Failed to load assignments.");
       }
@@ -152,20 +181,27 @@ export default function InteractionMarksPage() {
 
                           {/* Action */}
                           <div className="flex items-center gap-3 shrink-0">
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300"
-                              onClick={() =>
-                                router.push(
-                                  `/dean/interaction-evaluation/${faculty._id}?externalId=${ext.userId}`
-                                )
-                              }
-                            >
-                              <FileText size={14} className="mr-1" />
-                              Evaluate
-                              <ArrowRight size={14} className="ml-1" />
-                            </Button>
+                            {evaluatedSet.has(`${ext.userId}:${faculty._id}`) ? (
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-green-100 border border-green-200 text-green-700">
+                                <CheckCircle2 size={14} />
+                                <span className="text-sm font-semibold">Evaluated</span>
+                              </div>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300"
+                                onClick={() =>
+                                  router.push(
+                                    `/dean/interaction-evaluation/${faculty._id}?externalId=${ext.userId}`
+                                  )
+                                }
+                              >
+                                <FileText size={14} className="mr-1" />
+                                Evaluate
+                                <ArrowRight size={14} className="ml-1" />
+                              </Button>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
