@@ -35,7 +35,6 @@ export async function GET(
       `${backendUrl}/appraisal/${userId}/pdf`,
       {
         headers: { Authorization: authHeader },
-        responseType: "arraybuffer",
         validateStatus: () => true,
       }
     );
@@ -47,14 +46,7 @@ export async function GET(
       );
     }
 
-    return new NextResponse(upstream.data as ArrayBuffer, {
-      status: 200,
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="appraisal-${userId}.pdf"`,
-        "Cache-Control": "no-store",
-      },
-    });
+    return NextResponse.json(upstream.data, { status: 200 });
   } catch (error) {
     console.error("[/api/appraisal/[userId]/pdf] Error:", error);
     return NextResponse.json(
