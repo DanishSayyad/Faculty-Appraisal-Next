@@ -165,11 +165,9 @@ export default function AddFacultyPage() {
       ...(field === "userId" && { password: value }),
     }));
 
-    if (field === "higherDeanName" && value.length > 0) {
+    if (field === "higherDeanName") {
       setShowDeanSuggestions(true);
       fetchDeanSuggestions();
-    } else if (field === "higherDeanName" && value.length === 0) {
-      setShowDeanSuggestions(false);
     }
   };
 
@@ -316,8 +314,7 @@ export default function AddFacultyPage() {
 
   const filteredDeanSuggestions = deanSuggestions.filter(
     (dean) =>
-      dean.name.toLowerCase().includes((formData.higherDeanName ?? "").toLowerCase()) &&
-      dean.dept === formData.department
+      dean.name.toLowerCase().includes((formData.higherDeanName ?? "").toLowerCase())
   );
 
   return (
@@ -528,10 +525,8 @@ export default function AddFacultyPage() {
                     value={formData.higherDeanName}
                     onChange={(e) => handleInputChange(e, "higherDeanName")}
                     onFocus={() => {
-                      if (formData.higherDeanName) {
-                        setShowDeanSuggestions(true);
-                        fetchDeanSuggestions();
-                      }
+                      setShowDeanSuggestions(true);
+                      fetchDeanSuggestions();
                     }}
                     className="h-11 bg-white border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-base"
                     required
